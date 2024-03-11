@@ -1,0 +1,26 @@
+CREATE TABLE Patients (
+    Patient_ID INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Meld_Score INT,
+    Alcoholism_Degree INT,
+    Age INT,
+    Hospital_ID INT,
+    FOREIGN KEY (Hospital_ID) REFERENCES Hospitals(Hospital_ID)
+);
+
+CREATE TABLE Hospitals (
+    Hospital_ID INT PRIMARY KEY,
+    Name VARCHAR(100),
+    Latitude DECIMAL(9,6),
+    Longitude DECIMAL(9,6),
+    Doctors_Available INT,
+    Beds_Available INT
+);
+
+CREATE TABLE Liver (
+    Liver_ID INT PRIMARY KEY,
+    Weight DECIMAL(10,2),
+    Size DECIMAL(10,2),
+    Life INT,
+    Time_Retrieval DATETIME
+);
