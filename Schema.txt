@@ -11,18 +11,16 @@ CREATE TABLE Patients (
 CREATE TABLE Hospitals (
     Hospital_ID INT PRIMARY KEY,
     Name VARCHAR(20),
-    Latitude real,
-    Longitude real,
+    Latitude REAL,
+    Longitude REAL,
     Doctors_Available INT,
     Beds_Available INT
 );
 
 CREATE TABLE Liver (
     Liver_ID INT PRIMARY KEY,
-    Hospital_id Int,
-    Weight Real,
-    Size_length Real,
-    Size_breath Real,
-    Life_distance real,
+    Hospital_id INT,
+    Liver_Age INT,
+    Life_distance REAL,
     foreign key (Hospital_id) references Hospitals(Hospital_id)
 );
