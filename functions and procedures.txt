@@ -1,47 +1,49 @@
 // package for insertion in each of the tables
 
 create or replace package value_insert as
-	procedure patient_insert (id in int, name in varchar(10), meld_score in real, alcoholism_degree in int, dob in date, hospital_id in int);
-	procedure hospital_insert (h_id int, name varchar(20), lat real, lon real, doc_avail int, beds_avail int);
-	procedure liver_insert (liv_id int, hos_id int, age int, dis real);
+	procedure patient_insert (id in int, name in varchar, meld_score in real, alcoholism_degree in int, dob in date, hospital_id in int);
+	procedure hospital_insert (h_id in int, name in varchar, lat in real, lon in real, doc_avail in int, beds_avail in int);
+	procedure liver_insert (liv_id in int, hos_id in int, age in int, dis in real);
 end value_insert;
 /
 
 
 create or replace package body value_insert as
-	procedure patient_insert(id in int, name in varchar(10), meld_score in real, alcoholism_degree in int, dob in date, hospital_id int) is
+	procedure patient_insert(id in int, name in varchar, meld_score in real, alcoholism_degree in int, dob in date, hospital_id in int) is
 begin
 	insert into patients values (id, name, meld_score, alcoholism_degree, dob, hospital_id);
 end;
-	procedure hospital_insert(id in int, name in varchar(20), lat in real, lon in real, doc_avail in int, beds_avail in int) is
+	procedure hospital_insert(h_id in int, name in varchar, lat in real, lon in real, doc_avail in int, beds_avail in int) is
 begin
-	insert into hospitals values(id, name, lat, lon, doc_avail, beds_avail);
+	insert into hospitals values(h_id, name, lat, lon, doc_avail, beds_avail);
 end;
 	procedure liver_insert(liv_id in int, hos_id in int, age in int, dis in real) is
 begin
 	insert into liver values(liv_id, hos_id, age, dis);
 end;
-end insertion;
+end value_insert;
 /
 
 
 // checks if liver can be transported before it expires
 
 create or replace function liver_transport_check(liv_id in int, hos_id int) return int as
-liv_hos int;
-liv_life real;
+liv_hos hospitals%rowtype;
+liv liver%rowtype;
+hos hospitals%rowtype;
 x real;
 y real;
 d real;
 begin
-	select life_distance into liv_life from liver where liver_id = liv_id;
-	select hospital_id into liv_hos from liver where liver_id = liv_id;
-	x := hos_id.latitude - liv_hos.latitude;
-	y := hos_id.longitude - liv_hos.longitude;
+	select * into liv from liver where liver_id = liv_id;
+	select * into liv_hos from hospitals where hospital_id = liv.hospital_id;
+	select * into hos from hospitals where hospital_id = hos_id;
+	x := hos.latitude - liv_hos.latitude;
+	y := hos.longitude - liv_hos.longitude;
 	x := x * x;
 	y := y * y;
 	d := sqrt(x + y);
-	if d <= liv_life then
+	if d <= liv.life_distance then
 		return 1;
 	else
 		return 0;
@@ -67,11 +69,11 @@ end;
 /
 
 create or replace procedure update_hospitals(hos_id in int) as
-cursor c(hos_id int) is beds, docs from store_beds_docs where hospital_id = hos_id;
+cursor c(hos_id int) is select beds, docs from store_beds_docs where hospital_id = hos_id;
 bed int;
 doc int;
 begin
-	open c;
+	open c(hos_id);
 		fetch c into bed, doc;
 		update hospitals
 		set beds_available = bed
@@ -85,7 +87,7 @@ end;
 
 // does the matching of livers with the patients
 
-create or replace procedure liver_transplant() as 
+create or replace procedure liver_transplant as 
 cursor liver is select liver_id, liver_age from liver order by life_distance asc;
 cursor patient is select patient_id, dob, hospital_id from patients order by meld_score desc, alcoholism_degree asc;
 flag int;
@@ -94,8 +96,8 @@ begin
 	for r in liver loop
 		flag := 1;
 		for x in patient loop
-			if datediff( year, x.dob, sysdate()) >= r.liver_age then
-				if liver_transport_check(r.liver_id, x.hospital_id) == 1 then
+			if to_date(sysdate(), 'yy') - to_date(x.dob, 'yy') >= r.liver_age then
+				if liver_transport_check(r.liver_id, x.hospital_id) = 1 then
 					flag := 0;
 					delete from patients
 					where patient_id = x.patient_id;
@@ -105,7 +107,7 @@ begin
 				end if;
 			end if;
 		end loop;
-		if flag == 1 then
+		if flag = 1 then
 			dbms_output.put_line('no patient matched for this liver');
 		end if;
 	end loop;
@@ -126,7 +128,7 @@ begin
 	set doctors_available = doctors_available - 1
 	where hospital_id = :old.hospital_id;
 	update hospitals
-	set beds_available = beds_available - 1;
+	set beds_available = beds_available - 1
 	where hospital_id = :old.hospital_id;
 end;
 /
