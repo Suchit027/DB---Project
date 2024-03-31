@@ -55,7 +55,7 @@ create table store_beds_docs(
 hospital_id int,
 beds int,
 docs int,
-foreign key hospital_id references hospitals(hospital_id));
+foreign key (hospital_id) references hospitals(hospital_id));
 
 create or replace trigger track
 after insert
