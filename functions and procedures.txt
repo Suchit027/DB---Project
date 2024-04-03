@@ -101,7 +101,7 @@ begin
 	for r in liver loop
 		flag := 1;
 		for x in patient loop
-			if to_date(sysdate(), 'yy') - to_date(x.dob, 'yy') >= r.liver_age then
+			if to_date(sysdate(), 'yyyy') - to_date(x.dob, 'yyyy') >= r.liver_age then
 				if liver_transport_check(r.liver_id, x.hospital_id) = 1 then
 					flag := 0;
 					delete from patients
