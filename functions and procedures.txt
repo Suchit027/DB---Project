@@ -39,7 +39,7 @@ begin
 	select * into liv_hos from hospitals where hospital_id = liv.hospital_id;
 	if liv_hos.doctors_available = 0 then
 		return 0;
-	elif liv_hos.beds_available = 0 then
+	elsif liv_hos.beds_available = 0 then
 		return 0;
 	end if;
 	select * into hos from hospitals where hospital_id = hos_id;
